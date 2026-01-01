@@ -1,110 +1,80 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import ProductCard from "@/components/shop/ProductCard";
 import Header from "@/components/layout/Header";
-import { Product } from "@/types";
+import { products } from "@/app/config";
 
-// Mock Data (Ideally fetch from API/DB)
-const products: Product[] = [
-    {
-        id: "1",
-        name: "Golden Turmeric Blend",
-        description: "An ancient immunity-boosting recipe passed down through generations.",
-        price: 12.99,
-        image: "/images/turmeric.jpg",
-        category: "powder",
-        slug: "golden-turmeric-blend",
-    },
-    {
-        id: "2",
-        name: "Spicy Chakli Mix",
-        description: "Crunchy, savory, and perfectly spiced.",
-        price: 8.50,
-        image: "/images/chakli.jpg",
-        category: "snack",
-        slug: "spicy-chakli-mix",
-    },
-    {
-        id: "3",
-        name: "Homemade Garam Masala",
-        description: "Aromatic blend of roasted whole spices.",
-        price: 14.00,
-        image: "/images/garam-masala.jpg",
-        category: "powder",
-        slug: "homemade-garam-masala",
-    },
-    {
-        id: "4",
-        name: "Sweet Potato Chips",
-        description: "Thinly sliced, crispy sweet potatoes seasoned with sea salt.",
-        price: 6.00,
-        image: "/images/chips.jpg",
-        category: "snack",
-        slug: "sweet-potato-chips",
-    },
-    {
-        id: "5",
-        name: "Coriander Powder",
-        description: "Freshly ground coriander seeds for vibrant flavor.",
-        price: 5.50,
-        image: "/images/coriander.jpg",
-        category: "powder",
-        slug: "coriander-powder",
-    },
-];
+// Define a type for our valid categories based on the config data
+type CategoryFilter = "all" | "Pickles" | "Powders" | "Snacks" | "Salted";
 
 export default function ShopPage() {
-    const [filter, setFilter] = useState<'all' | 'snack' | 'powder'>('all');
+  const [filter, setFilter] = useState<CategoryFilter>("all");
 
-    const filteredProducts = products.filter(product =>
-        filter === 'all' ? true : product.category === filter
-    );
+  // Filter logic: matches the category string exactly as it appears in config.ts
+  const filteredProducts = products.filter((product) =>
+    filter === "all" ? true : product.category === filter
+  );
 
-    return (
-        <div className="min-h-screen bg-background text-foreground flex flex-col">
-            <Header />
-            <main className="container mx-auto px-4 py-8 flex-grow">
-                <h1 className="text-4xl font-serif font-bold text-secondary mb-8">Shop All Products</h1>
+  // Helper to render filter buttons consistently
+  const FilterButton = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: CategoryFilter;
+  }) => (
+    <button
+      onClick={() => setFilter(value)}
+      className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+        filter === value
+          ? "bg-primary text-white shadow-md"
+          : "bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300"
+      }`}
+    >
+      {label}
+    </button>
+  );
 
-                {/* Filter */}
-                <div className="mb-8 flex gap-4 overflow-x-auto pb-2">
-                    <button
-                        onClick={() => setFilter('all')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === 'all'
-                                ? 'bg-primary text-white'
-                                : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
-                            }`}
-                    >
-                        All
-                    </button>
-                    <button
-                        onClick={() => setFilter('snack')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === 'snack'
-                                ? 'bg-primary text-white'
-                                : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
-                            }`}
-                    >
-                        Snacks
-                    </button>
-                    <button
-                        onClick={() => setFilter('powder')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === 'powder'
-                                ? 'bg-primary text-white'
-                                : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
-                            }`}
-                    >
-                        Powders
-                    </button>
-                </div>
+  return (
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Header />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {filteredProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-            </main>
+      <main className="container mx-auto px-4 py-12 flex-grow">
+        <div className="mb-10 text-center md:text-left">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-secondary mb-4">
+            Our Collection
+          </h1>
+          <p className="text-stone-500 max-w-2xl">
+            Discover authentic flavors delivered from our kitchen to your
+            doorstep. From spicy pickles to aromatic spice blends.
+          </p>
         </div>
-    );
+
+        {/* Filter Bar */}
+        <div className="mb-10 flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+          <FilterButton label="All Products" value="all" />
+          <FilterButton label="Pickles" value="Pickles" />
+          <FilterButton label="Masala Powders" value="Powders" />
+          <FilterButton label="Traditional Snacks" value="Snacks" />
+          <FilterButton label="Salted Treats" value="Salted" />
+        </div>
+
+        {/* Product Grid */}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="py-20 text-center border border-dashed border-stone-200 rounded-2xl">
+            <p className="text-stone-400">
+              No products found in this category.
+            </p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
 }
