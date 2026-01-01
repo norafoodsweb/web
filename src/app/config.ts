@@ -85,7 +85,7 @@ export const products: Product[] = [
     description:
       "Deeply aromatic spices with an extra punch of black pepper and fennel for rich, dark meat dishes.",
     price: 6.5,
-    image: "/images/beef-masala.jpg",
+    image: "/images/meatMasala.png",
     category: "Powders",
     slug: "beef-masala",
   },
