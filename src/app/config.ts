@@ -41,11 +41,11 @@ export const products: Product[] = [
   },
   {
     id: "4",
-    name: "Grandma's Mango Pickle",
+    name: "Mango Pickle",
     description:
       "Raw green mangoes sliced and cured with red chili and asafoetida for a classic tangy kick.",
     price: 8.99,
-    image: "/images/mango-pickle.jpg",
+    image: "/images/mangoPickle.png",
     category: "Pickles",
     slug: "mango-pickle",
   },
@@ -75,7 +75,7 @@ export const products: Product[] = [
     description:
       "A robust blend of coriander, cumin, and cardamom tailored for the perfect, aromatic chicken curry.",
     price: 6.5,
-    image: "/images/chicken-masala.jpg",
+    image: "/images/chickenMasala.png",
     category: "Powders",
     slug: "chicken-masala",
   },
@@ -135,7 +135,7 @@ export const products: Product[] = [
     description:
       "The perfect ratio of roasted dal and hand-picked spices for a thick and authentic South Indian Sambar.",
     price: 5.0,
-    image: "/images/sambar-powder.jpg",
+    image: "/images/sambarPowder.png",
     category: "Powders",
     slug: "sambar-powder",
   },
