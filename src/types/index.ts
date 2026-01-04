@@ -4,7 +4,7 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  category: "Pickles" | "Powders" | "Snacks" | "Salted";
+  category: "Pickles" | "Powders" | "Snacks" | "Salted" | "Spice_Powders";
   slug: string;
 }
 

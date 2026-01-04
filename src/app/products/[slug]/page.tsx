@@ -98,7 +98,7 @@ export default function ProductDetailPage() {
                 </button>
               </div>
 
-              {/* Add to Cart Button */}
+              {/* Add to Cart Button
               <button
                 className="w-full sm:flex-grow bg-primary text-white py-4 px-8 rounded-lg font-bold text-lg hover:bg-opacity-90 transition-all shadow-lg active:scale-95"
                 onClick={() =>
@@ -106,7 +106,7 @@ export default function ProductDetailPage() {
                 }
               >
                 Add to Cart — ${(product.price * quantity).toFixed(2)}
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

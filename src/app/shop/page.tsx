@@ -6,7 +6,7 @@ import Header from "@/components/layout/Header";
 import { products } from "@/app/config";
 
 // Define a type for our valid categories based on the config data
-type CategoryFilter = "all" | "Pickles" | "Powders" | "Snacks" | "Salted";
+type CategoryFilter = "all" | "Pickles" | "Powders" | "Snacks" | "Salted" | "Spice_Powders";
 
 export default function ShopPage() {
   const [filter, setFilter] = useState<CategoryFilter>("all");
@@ -56,6 +56,7 @@ export default function ShopPage() {
           <FilterButton label="All Products" value="all" />
           <FilterButton label="Pickles" value="Pickles" />
           <FilterButton label="Masala Powders" value="Powders" />
+          <FilterButton label="Spice Powders" value="Spice_Powders" />
           <FilterButton label="Traditional Snacks" value="Snacks" />
           <FilterButton label="Salted Treats" value="Salted" />
         </div>
