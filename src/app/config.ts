@@ -55,7 +55,7 @@ export const products: Product[] = [
     description:
       "A crunchy medley of carrots, cauliflower, and beans infused with mustard, ginger, and vinegar.",
     price: 9.5,
-    image: "/images/mixedPickle.png",
+    image: "/images/mixedpickle.png",
     category: "Pickles",
     slug: "vegetable-pickle",
   },
