@@ -1,12 +1,15 @@
 export interface Product {
-  id: string;
+  d?: number;
   name: string;
-  description: string;
-  quantity: string;
-  price: number;
-  image: string;
-  category: "Pickles" | "Powders" | "Snacks" | "Salted" | "Spice_Powders";
   slug: string;
+  category: string;
+  price: number;
+  quantity: string;
+  shelflife: string;
+  ingredients: string;
+  description: string;
+  image: string;
+  bestseller?: boolean;
 }
 
 // export const products: Product[] = [
