@@ -1,80 +1,74 @@
-"use client";
 
-import { useState } from "react";
-import ProductCard from "@/components/shop/ProductCard";
+'use client'
+
+import { use, useState } from "react";
 import Header from "@/components/layout/Header";
-import { products } from "@/app/config";
-
-// Define a type for our valid categories based on the config data
-type CategoryFilter = "all" | "Pickles" | "Powders" | "Snacks" | "Salted" | "Spice_Powders";
+import { createClient } from "@/utils/supabase/client";
+import Image from "next/image";
 
 export default function ShopPage() {
-  const [filter, setFilter] = useState<CategoryFilter>("all");
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabaseClient = createClient();
 
-  // Filter logic: matches the category string exactly as it appears in config.ts
-  const filteredProducts = products.filter((product) =>
-    filter === "all" ? true : product.category === filter
-  );
+  async function fetchProducts() {
+    const { data, error } = await supabaseClient.from("products").select("*");
+    if (error) {
+      console.log(error);
+    } else {
+      setProducts(data);
+      setLoading(false);
+    }
+  }
 
-  // Helper to render filter buttons consistently
-  const FilterButton = ({
-    label,
-    value,
-  }: {
-    label: string;
-    value: CategoryFilter;
-  }) => (
-    <button
-      onClick={() => setFilter(value)}
-      className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-        filter === value
-          ? "bg-primary text-white shadow-md"
-          : "bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300"
-      }`}
-    >
-      {label}
-    </button>
-  );
+  fetchProducts();
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
+      <main className="grow container mx-auto px-4 py-12">
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-10 items-start">
+          {products.map((product) => (
+            <div
+              key={product.id}
+              className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-stone-100"
+            >
+              <div className="aspect-square relative overflow-hidden bg-stone-50">
+                {/* Placeholder for actual image. In real app, use product.image */}
+                {/* <div className="absolute inset-0 bg-stone-200 flex items-center justify-center text-stone-400">
+                        [Image: {product.name}]
+                      </div> */}
+                {
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                }
 
-      <main className="container mx-auto px-4 py-12 flex-grow">
-        <div className="mb-10 text-center md:text-left">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-secondary mb-4">
-            Our Collection
-          </h1>
-          <p className="text-stone-500 max-w-2xl">
-            Discover authentic flavors delivered from our kitchen to your
-            doorstep. From spicy pickles to aromatic spice blends.
-          </p>
+                {/* Tag Position (e.g. New, Bestseller) could go here */}
+              </div>
+              <div className="p-4 flex flex-col gap-2">
+                <h3 className="text-lg font-serif font-medium text-secondary">
+                  <a href={`/products/${product.slug}`}>
+                    <span aria-hidden="true" className="absolute inset-0" />
+                    {product.name}
+                  </a>
+                </h3>
+                <p className="text-sm text-stone-600 line-clamp-2">
+                  {product.description}
+                </p>
+
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-lg font-semibold text-primary">
+                    ₹{product.price.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Filter Bar */}
-        <div className="mb-10 flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-          <FilterButton label="All Products" value="all" />
-          <FilterButton label="Pickles" value="Pickles" />
-          <FilterButton label="Masala Powders" value="Powders" />
-          <FilterButton label="Spice Powders" value="Spice_Powders" />
-          <FilterButton label="Traditional Snacks" value="Snacks" />
-          <FilterButton label="Salted Treats" value="Salted" />
-        </div>
-
-        {/* Product Grid */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="py-20 text-center border border-dashed border-stone-200 rounded-2xl">
-            <p className="text-stone-400">
-              No products found in this category.
-            </p>
-          </div>
-        )}
       </main>
     </div>
   );

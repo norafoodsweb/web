@@ -1,12 +1,30 @@
+'use client';
+
+import { useState } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/shop/ProductCard";
 import Header from "@/components/layout/Header";
-import { products } from "@/app/config"; // Import the actual data
 import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Home() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabaseClient = createClient();
+
+  async function fetchProducts() {
+    const { data, error } = await supabaseClient.from("products").select("*").eq("bestseller", "true");
+    if (error) {
+      console.log(error);
+    } else {
+      setProducts(data);
+      setLoading(false);
+    }
+  }
+
+  fetchProducts();
   // Select only the first 3 products from your config file
-  const featuredProducts = products.slice(0, 3);
+  const featuredProducts = products;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

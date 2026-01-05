@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import { Product } from "@/app/config";
 
 interface ProductCardProps {
   product: Product;
