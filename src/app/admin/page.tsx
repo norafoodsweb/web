@@ -24,6 +24,7 @@ type Product = {
   category: string;
   price: number;
   quantity: string;
+  stock: number;
   shelflife: string;
   ingredients: string;
   description: string;
@@ -43,6 +44,7 @@ const EMPTY_PRODUCT: Product = {
   category: "",
   price: 0,
   quantity: "",
+  stock: 0,
   shelflife: "",
   ingredients: "",
   description: "",
@@ -196,9 +198,10 @@ export default function AdminPage() {
     setCurrentProduct((prev) => {
       const newData = {
         ...prev,
-        [name]: name === "price" ? Number(value) : value,
+        // UPDATED: Check for both 'price' AND 'stock' to convert to number
+        [name]: name === "price" || name === "stock" ? Number(value) : value,
       };
-      // Auto-slug logic
+
       if (name === "name" && !isEditing) {
         newData.slug = value
           .toLowerCase()
@@ -413,6 +416,7 @@ export default function AdminPage() {
                   <th className="p-4 font-semibold">Product</th>
                   <th className="p-4 font-semibold">Category</th>
                   <th className="p-4 font-semibold">Price</th>
+                  <th className="p-4 font-semibold">Stock</th>
                   <th className="p-4 font-semibold">Net Qty</th>
                   <th className="p-4 font-semibold text-right">Actions</th>
                 </tr>
@@ -474,6 +478,20 @@ export default function AdminPage() {
                       </td>
                       <td className="p-4 font-medium text-slate-800">
                         ₹{product.price}
+                      </td>
+                      {/* --- NEW STOCK COLUMN --- */}
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            product.stock > 0
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {product.stock > 0
+                            ? `${product.stock} left`
+                            : "Out of Stock"}
+                        </span>
                       </td>
                       <td className="p-4 text-slate-600 font-medium">
                         {product.quantity}
@@ -633,6 +651,20 @@ export default function AdminPage() {
                       type="number"
                       name="price"
                       value={currentProduct.price}
+                      onChange={handleInputChange}
+                      className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                  {/* --- NEW STOCK INPUT --- */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">
+                      Stock Count
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      name="stock"
+                      value={currentProduct.stock}
                       onChange={handleInputChange}
                       className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
                     />

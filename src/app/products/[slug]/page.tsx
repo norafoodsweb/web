@@ -174,21 +174,30 @@ export default function ProductDetailPage() {
                </button>
              </div>  */}
             <div className="w-full flex flex-col sm:flex-row gap-4 items-center mt-10">
-              <div className="w-full flex flex-col sm:flex-row gap-4 items-center mt-10">
-                <a
-                  // Replace 919876543210 with your actual WhatsApp number (include country code)
-                  href={`https://wa.me/+917306874286?text=${encodeURIComponent(
-                    `Hello, I would like to buy ${
-                      product.name
-                    } - Price: ₹${(product.price * quantity).toFixed(2)}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="md:w-[50%] w-full bg-indigo-600 text-white py-4 px-8 rounded-lg font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg active:scale-95 text-center flex justify-center items-center"
-                >
-                  Buy Now — ₹{(product.price * quantity).toFixed(2)}
-                </a>
-              </div>
+              {product.stock > 0 ? (
+                <div className="w-full flex flex-col sm:flex-row gap-4 items-center mt-10">
+                  <a
+                    href={`https://wa.me/+917306874286?text=${encodeURIComponent(
+                      `Hello, I would like to buy ${product.name} - Price: ₹${(
+                        product.price * quantity
+                      ).toFixed(2)}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="md:w-[50%] w-full bg-indigo-600 text-white py-4 px-8 rounded-lg font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg active:scale-95 text-center flex justify-center items-center"
+                  >
+                    Buy Now — ₹{(product.price * quantity).toFixed(2)}
+                  </a>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col sm:flex-row gap-4 items-center mt-10">
+                  <button
+                    className="w-full sm:flex-grow bg-indigo-600 text-white py-4 px-8 rounded-lg font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
+                  >
+                    Item Out of Stock
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

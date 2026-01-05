@@ -6,6 +6,7 @@ import ProductCard from "@/components/shop/ProductCard";
 import Header from "@/components/layout/Header";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
+import Footer from "@/components/layout/Footer";
 
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
@@ -160,10 +161,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      <footer className="bg-secondary text-stone-200 py-12 text-center">
-        <p>&copy; {new Date().getFullYear()} Nora. All rights reserved.</p>
-      </footer>
+      <Footer/>
     </div>
   );
 }
