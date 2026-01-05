@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-
 :root {
   /* Nora Brand Palette */
   --nora-green: #4A6741;
@@ -134,6 +133,7 @@ html {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
