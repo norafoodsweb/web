@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Header from "@/components/layout/Header";
 import { createClient } from "@/utils/supabase/client";
+// UPDATED IMPORT: Using the new responsive Navbar
+import { Navbar } from "@/components/layout/Navbar";
 import {
   Plus,
   Edit,
@@ -13,7 +14,7 @@ import {
   Image as ImageIcon,
   Star,
   Save,
-  Tags, // Icon for Categories
+  Tags,
 } from "lucide-react";
 
 // --- TYPES ---
@@ -32,7 +33,6 @@ type Product = {
   bestseller?: boolean;
 };
 
-// New Category Type
 type Category = {
   id: number;
   category: string;
@@ -59,7 +59,7 @@ export default function AdminPage() {
   // --- STATES ---
   const [username, setUsername] = useState<string>("Admin");
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]); // State for Categories
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
@@ -106,14 +106,13 @@ export default function AdminPage() {
           await supabase.auth.signOut();
           router.replace("/");
           return;
-        }
+        }        
 
         setUsername(profile.name || "Admin");
         setIsLoadingPage(false);
 
-        // Fetch Data
-        await fetchCategories(); // Fetch categories first
-        await fetchProducts(); // Then products
+        await fetchCategories();
+        await fetchProducts();
       } catch (error) {
         console.error("Security check failed:", error);
         router.replace("/auth");
@@ -141,7 +140,6 @@ export default function AdminPage() {
 
     if (data) {
       setProducts(data);
-      // Initialize bestsellers
       const currentBestsellers = data
         .filter((p) => p.bestseller)
         .map((p) => p.id!);
@@ -154,41 +152,30 @@ export default function AdminPage() {
     setLoadingProducts(false);
   };
 
-  // --- 3. CATEGORY CRUD ---
+  // --- 3. CRUD HANDLERS ---
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
     setIsSavingCategory(true);
-
     const { error } = await supabase
       .from("category")
       .insert([{ category: newCategoryName }]);
-
     if (error) {
       alert("Error adding category (Name might be duplicate)");
     } else {
-      setNewCategoryName(""); // Reset input
-      fetchCategories(); // Refresh list
+      setNewCategoryName("");
+      fetchCategories();
     }
     setIsSavingCategory(false);
   };
 
   const handleDeleteCategory = async (id: number) => {
-    if (
-      !confirm(
-        "Delete this category? Products using it will remain but the label might be lost in future edits."
-      )
-    )
-      return;
+    if (!confirm("Delete this category?")) return;
     const { error } = await supabase.from("category").delete().eq("id", id);
-    if (!error) {
-      setCategories(categories.filter((c) => c.id !== id));
-    } else {
-      alert("Failed to delete category");
-    }
+    if (!error) setCategories(categories.filter((c) => c.id !== id));
+    else alert("Failed to delete category");
   };
 
-  // --- 4. PRODUCT CRUD ---
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -198,10 +185,8 @@ export default function AdminPage() {
     setCurrentProduct((prev) => {
       const newData = {
         ...prev,
-        // UPDATED: Check for both 'price' AND 'stock' to convert to number
         [name]: name === "price" || name === "stock" ? Number(value) : value,
       };
-
       if (name === "name" && !isEditing) {
         newData.slug = value
           .toLowerCase()
@@ -223,7 +208,6 @@ export default function AdminPage() {
         else throw new Error("Image upload failed");
       }
       const productData = { ...currentProduct, image: imageUrl };
-
       if (isEditing && currentProduct.id) {
         const { error } = await supabase
           .from("products")
@@ -247,7 +231,6 @@ export default function AdminPage() {
     }
   };
 
-  // ... (Keep existing uploadImage, handleDelete, handleSaveBestsellers, handleSlotChange, handleLogout)
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split(".").pop();
@@ -262,7 +245,6 @@ export default function AdminPage() {
         .getPublicUrl(filePath);
       return data.publicUrl;
     } catch (error) {
-      console.error(error);
       return null;
     }
   };
@@ -302,12 +284,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/auth");
-  };
-
-  // --- OPEN MODALS HELPERS ---
+  // --- MODAL HELPERS ---
   const openAddModal = () => {
     setCurrentProduct(EMPTY_PRODUCT);
     setSelectedFile(null);
@@ -330,13 +307,16 @@ export default function AdminPage() {
     );
   }
 
+  // --- UPDATED LAYOUT ---
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <Header />
+    <div className="min-h-screen bg-slate-50 font-sans">
+      {/* 1. TOP NAVBAR (Handles Desktop & Mobile automatically) */}
+      <Navbar type="admin" />
 
-      <main className="grow container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between  mb-8 gap-4">
+      {/* 2. MAIN CONTENT (Centered Container) */}
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Dashboard Title & Add Button */}
+        <div className="flex flex-col md:flex-row justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
             <p className="text-slate-500 mt-1">
@@ -345,14 +325,12 @@ export default function AdminPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            {/* Manage Categories Button */}
             <button
               onClick={() => setIsCategoryModalOpen(true)}
               className="flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-lg font-medium transition shadow-sm"
             >
               <Tags size={18} /> Categories
             </button>
-            {/* Add Product Button */}
             <button
               onClick={openAddModal}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition shadow-sm"
@@ -424,13 +402,13 @@ export default function AdminPage() {
               <tbody className="divide-y divide-slate-100">
                 {loadingProducts ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                    <td colSpan={6} className="p-8 text-center text-slate-500">
                       Loading products...
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-500">
+                    <td colSpan={6} className="p-8 text-center text-slate-500">
                       No products found.
                     </td>
                   </tr>
@@ -479,7 +457,6 @@ export default function AdminPage() {
                       <td className="p-4 font-medium text-slate-800">
                         ₹{product.price}
                       </td>
-                      {/* --- NEW STOCK COLUMN --- */}
                       <td className="p-4">
                         <span
                           className={`px-2 py-1 rounded text-xs font-medium ${
@@ -520,13 +497,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="fixed bottom-8 right-8 bg-white border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 shadow-lg px-6 py-3 rounded-full font-semibold transition-all duration-200 flex items-center gap-2 group z-40"
-        >
-          Logout
-        </button>
-
         {/* --- CATEGORY MANAGER MODAL --- */}
         {isCategoryModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -542,9 +512,7 @@ export default function AdminPage() {
                   <X size={20} className="text-slate-500" />
                 </button>
               </div>
-
               <div className="p-6">
-                {/* Add Category Form */}
                 <form onSubmit={handleAddCategory} className="flex gap-2 mb-6">
                   <input
                     type="text"
@@ -565,8 +533,6 @@ export default function AdminPage() {
                     )}
                   </button>
                 </form>
-
-                {/* Category List */}
                 <div className="max-h-60 overflow-y-auto space-y-2">
                   {categories.length === 0 ? (
                     <p className="text-center text-slate-500 text-sm">
@@ -640,7 +606,6 @@ export default function AdminPage() {
                     />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-slate-700">
@@ -655,7 +620,6 @@ export default function AdminPage() {
                       className="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
                     />
                   </div>
-                  {/* --- NEW STOCK INPUT --- */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-slate-700">
                       Stock Count
@@ -683,8 +647,6 @@ export default function AdminPage() {
                       placeholder="e.g. 100g"
                     />
                   </div>
-
-                  {/* CHANGED: Category is now a dropdown */}
                   <div className="space-y-1 col-span-2 md:col-span-1">
                     <label className="text-sm font-medium text-slate-700">
                       Category
@@ -704,7 +666,6 @@ export default function AdminPage() {
                       ))}
                     </select>
                   </div>
-
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-slate-700">
                       Shelf Life
@@ -718,7 +679,6 @@ export default function AdminPage() {
                     />
                   </div>
                 </div>
-                {/* ... Ingredients, Description, Image Upload ... */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-slate-700">
                     Ingredients
@@ -787,7 +747,6 @@ export default function AdminPage() {
                     )}
                   </div>
                 </div>
-
                 <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
                   <button
                     type="button"
