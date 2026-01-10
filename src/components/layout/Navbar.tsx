@@ -42,7 +42,7 @@ const adminLinks = [
 
 const customerLinks = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/products", label: "Shop", icon: Store },
+  { href: "/shop", label: "Shop", icon: Store },
   { href: "/about", label: "Our Story", icon: BookOpen },
   { href: "/contact", label: "Contact", icon: Phone },
 ];
