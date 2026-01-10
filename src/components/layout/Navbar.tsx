@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useCartStore } from "@/app/context/CartContext"; // 1. Import Cart Store
+import { useCartStore } from "@/app/context/CartContext";
 import {
   Sheet,
   SheetContent,
@@ -27,7 +27,6 @@ import {
   Home,
   BookOpen,
   Phone,
-  User as UserIcon,
   ShoppingBag,
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
@@ -43,7 +42,7 @@ const adminLinks = [
 
 const customerLinks = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/shop", label: "Shop", icon: Store }, // Updated to /products
+  { href: "/products", label: "Shop", icon: Store },
   { href: "/about", label: "Our Story", icon: BookOpen },
   { href: "/contact", label: "Contact", icon: Phone },
 ];
@@ -61,9 +60,9 @@ export function Navbar({ type }: NavbarProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // 2. Cart Store Hook
+  // Cart Store Hook
   const { items } = useCartStore();
-  const [mounted, setMounted] = useState(false); // To prevent hydration errors
+  const [mounted, setMounted] = useState(false);
 
   const links = type === "admin" ? adminLinks : customerLinks;
 
@@ -101,22 +100,22 @@ export function Navbar({ type }: NavbarProps) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-primary/10 bg-nora-beige/95 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* 1. LOGO */}
           <div className="flex-shrink-0 flex items-center gap-2">
             <Link
               href={type === "admin" ? "/admin" : "/"}
-              className="flex items-center gap-2 font-serif font-bold text-xl text-indigo-600"
+              className="flex items-center gap-2 font-serif font-bold text-2xl text-primary hover:text-primary/80 transition-colors"
             >
-              <Store className="w-6 h-6" />
+              <Store className="w-7 h-7" />
               <span>{type === "admin" ? "Nora Admin" : "Nora"}</span>
             </Link>
           </div>
 
           {/* 2. DESKTOP LINKS */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-8">
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -126,8 +125,10 @@ export function Navbar({ type }: NavbarProps) {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "flex items-center gap-2 text-sm font-medium transition-colors hover:text-indigo-600",
-                    isActive ? "text-indigo-600" : "text-slate-600"
+                    "flex items-center gap-2 text-sm font-bold transition-all hover:text-primary",
+                    isActive
+                      ? "text-primary border-b-2 border-primary pb-0.5"
+                      : "text-stone-500"
                   )}
                 >
                   {isActive && <Icon className="w-4 h-4" />}
@@ -136,7 +137,7 @@ export function Navbar({ type }: NavbarProps) {
               );
             })}
 
-            <div className="h-6 w-px bg-slate-200 mx-2" />
+            <div className="h-6 w-px bg-stone-300 mx-2" />
 
             {/* 3. CART ICON (Only for customers) */}
             {type === "customer" && (
@@ -144,11 +145,11 @@ export function Navbar({ type }: NavbarProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative text-slate-600 hover:text-indigo-600"
+                  className="relative text-stone-600 hover:text-primary hover:bg-primary/5"
                 >
-                  <ShoppingBag className="w-5 h-5" />
+                  <ShoppingBag className="w-6 h-6" />
                   {cartCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+                    <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-nora-beige border-2 border-nora-beige transform translate-x-1 -translate-y-1">
                       {cartCount}
                     </span>
                   )}
@@ -166,7 +167,7 @@ export function Navbar({ type }: NavbarProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-slate-600"
+                        className="text-stone-600 font-medium hover:text-primary hover:bg-primary/5"
                       >
                         My Orders
                       </Button>
@@ -176,7 +177,7 @@ export function Navbar({ type }: NavbarProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-slate-600"
+                      className="text-stone-600 font-medium hover:text-primary hover:bg-primary/5"
                     >
                       Profile
                     </Button>
@@ -185,7 +186,7 @@ export function Navbar({ type }: NavbarProps) {
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="text-slate-500 hover:text-red-600 hover:bg-red-50"
+                    className="text-stone-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
@@ -196,7 +197,7 @@ export function Navbar({ type }: NavbarProps) {
                 <Link href="/auth">
                   <Button
                     size="sm"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className="bg-primary hover:bg-[#3d5635] text-nora-beige font-bold shadow-sm"
                   >
                     <LogIn className="w-4 h-4 mr-2" />
                     Sign In
@@ -206,18 +207,18 @@ export function Navbar({ type }: NavbarProps) {
           </div>
 
           {/* 5. MOBILE MENU TRIGGER */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex items-center gap-4">
             {/* Mobile Cart Icon */}
             {type === "customer" && (
               <Link href="/cart">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative text-slate-600"
+                  className="relative text-stone-600 hover:text-primary"
                 >
-                  <ShoppingBag className="w-5 h-5" />
+                  <ShoppingBag className="w-6 h-6" />
                   {cartCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+                    <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-nora-beige border-2 border-nora-beige transform translate-x-1 -translate-y-1">
                       {cartCount}
                     </span>
                   )}
@@ -227,12 +228,19 @@ export function Navbar({ type }: NavbarProps) {
 
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-slate-600">
-                  <Menu className="h-6 w-6" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-stone-600 hover:text-primary"
+                >
+                  <Menu className="h-7 w-7" />
                 </Button>
               </SheetTrigger>
 
-              <SheetContent side="left" className="w-72 bg-white p-0">
+              <SheetContent
+                side="left"
+                className="w-72 bg-nora-beige border-r-primary/10 p-0"
+              >
                 <div className="sr-only">
                   <SheetTitle>Menu</SheetTitle>
                   <SheetDescription>Navigation</SheetDescription>
@@ -240,9 +248,9 @@ export function Navbar({ type }: NavbarProps) {
 
                 <div className="h-full flex flex-col">
                   {/* Mobile Header */}
-                  <div className="h-16 flex items-center px-6 border-b border-slate-100">
-                    <span className="font-serif font-bold text-xl text-indigo-600">
-                      Menu
+                  <div className="h-20 flex items-center px-6 border-b border-primary/10 bg-white/50">
+                    <span className="font-serif font-bold text-2xl text-primary flex items-center gap-2">
+                      <Store className="w-6 h-6" /> Nora
                     </span>
                   </div>
 
@@ -258,13 +266,18 @@ export function Navbar({ type }: NavbarProps) {
                           href={link.href}
                           onClick={() => setOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors",
+                            "flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all",
                             isActive
-                              ? "bg-indigo-50 text-indigo-700"
-                              : "text-slate-600 hover:bg-slate-50"
+                              ? "bg-primary/10 text-primary shadow-sm border border-primary/5"
+                              : "text-stone-600 hover:bg-white hover:text-primary hover:shadow-sm"
                           )}
                         >
-                          <Icon className="w-5 h-5" />
+                          <Icon
+                            className={cn(
+                              "w-5 h-5",
+                              isActive ? "text-primary" : "text-stone-400"
+                            )}
+                          />
                           {link.label}
                         </Link>
                       );
@@ -275,30 +288,30 @@ export function Navbar({ type }: NavbarProps) {
                       <Link
                         href="/profile/orders"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50"
+                        className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-stone-600 hover:bg-white hover:text-primary transition-all hover:shadow-sm"
                       >
-                        <Package className="w-5 h-5" />
+                        <Package className="w-5 h-5 text-stone-400" />
                         My Orders
                       </Link>
                     )}
                   </div>
 
                   {/* Mobile Auth Logic */}
-                  <div className="p-4 border-t border-slate-100">
+                  <div className="p-6 border-t border-primary/10 bg-white/50">
                     {!loadingAuth &&
                       (user ? (
                         <Button
                           variant="ghost"
                           onClick={handleLogout}
-                          className="w-full justify-start text-slate-500 hover:text-red-600 hover:bg-red-50"
+                          className="w-full justify-start text-stone-500 hover:text-red-600 hover:bg-red-50 gap-3 font-medium"
                         >
-                          <LogOut className="w-4 h-4 mr-2" />
+                          <LogOut className="w-5 h-5" />
                           Sign Out
                         </Button>
                       ) : (
                         <Link href="/auth" onClick={() => setOpen(false)}>
-                          <Button className="w-full justify-start bg-indigo-600 hover:bg-indigo-700 text-white">
-                            <LogIn className="w-4 h-4 mr-2" />
+                          <Button className="w-full justify-start bg-primary hover:bg-[#3d5635] text-nora-beige font-bold h-12 rounded-xl shadow-md">
+                            <LogIn className="w-5 h-5 mr-3" />
                             Sign In
                           </Button>
                         </Link>

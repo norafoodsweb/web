@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react"; // Fixed import (added useEffect)
-import Header from "@/components/layout/Header";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
+import { Navbar } from "@/components/layout/Navbar";
 // Optional: Import an icon if you want one inside the ribbon
 // import { XCircle } from "lucide-react";
 
@@ -29,7 +29,7 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
+      <Navbar type="customer" />
       <main className="grow container mx-auto px-4 py-12">
         {/* Add a loading state */}
         {loading && (
