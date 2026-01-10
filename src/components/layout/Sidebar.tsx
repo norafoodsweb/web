@@ -42,8 +42,8 @@ const customerLinks = [
   { href: "/shop", label: "Shop Products", icon: Store }, // Changed to Store icon & /products
   { href: "/cart", label: "My Cart", icon: ShoppingCart },
   { href: "/profile/orders", label: "My Orders", icon: Package }, // Added Orders link
-  { href: "/about", label: "Our Story", icon: BookOpen },
-  { href: "/contact", label: "Contact Us", icon: Phone },
+  { href: "/#about", label: "Our Story", icon: BookOpen },
+  { href: "/#contact", label: "Contact Us", icon: Phone },
 ];
 
 interface SidebarProps {

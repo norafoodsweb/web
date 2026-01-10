@@ -43,8 +43,8 @@ const adminLinks = [
 const customerLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/shop", label: "Shop", icon: Store },
-  { href: "/about", label: "Our Story", icon: BookOpen },
-  { href: "/contact", label: "Contact", icon: Phone },
+  { href: "/#about", label: "Our Story", icon: BookOpen },
+  { href: "/#contact", label: "Contact", icon: Phone },
 ];
 
 interface NavbarProps {
