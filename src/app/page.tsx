@@ -380,7 +380,7 @@ export default function Home() {
                         href="mailto:norafoods@gmail.com"
                         className="text-lg font-medium hover:text-accent transition-colors"
                       >
-                        norafoods@gmail.com
+                        norafoodsweb@gmail.com
                       </a>
                     </div>
                     <div className="flex items-start gap-5 group">
@@ -417,7 +417,7 @@ export default function Home() {
                       <Facebook size={24} />
                     </a>
                     <a
-                      href="#"
+                      href="https://www.instagram.com/nora._.foods/"
                       className="p-4 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white rounded-full hover:scale-110 hover:-translate-y-1 transition-all shadow-lg"
                       title="Instagram"
                     >
