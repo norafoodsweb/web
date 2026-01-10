@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useCartStore } from "@/app/context/CartContext"; // 1. Import Cart Store
 import {
   Sheet,
   SheetContent,
@@ -12,7 +13,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { useState, useEffect } from "react"; // 1. Added useEffect
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -20,15 +21,16 @@ import {
   ShoppingCart,
   Settings,
   LogOut,
-  LogIn, // 2. Added LogIn icon
+  LogIn,
   Menu,
   Store,
   Home,
   BookOpen,
   Phone,
   User as UserIcon,
+  ShoppingBag,
 } from "lucide-react";
-import { User } from "@supabase/supabase-js"; // Type definition
+import { User } from "@supabase/supabase-js";
 
 // --- Configuration ---
 const adminLinks = [
@@ -41,7 +43,7 @@ const adminLinks = [
 
 const customerLinks = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/shop", label: "Shop", icon: ShoppingCart },
+  { href: "/shop", label: "Shop", icon: Store }, // Updated to /products
   { href: "/about", label: "Our Story", icon: BookOpen },
   { href: "/contact", label: "Contact", icon: Phone },
 ];
@@ -56,14 +58,17 @@ export function Navbar({ type }: NavbarProps) {
   const supabase = createClient();
 
   const [open, setOpen] = useState(false);
-  // 3. New State: Track the logged-in user
   const [user, setUser] = useState<User | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
+  // 2. Cart Store Hook
+  const { items } = useCartStore();
+  const [mounted, setMounted] = useState(false); // To prevent hydration errors
+
   const links = type === "admin" ? adminLinks : customerLinks;
 
-  // 4. Check Authentication on Mount
   useEffect(() => {
+    setMounted(true);
     const getUser = async () => {
       const {
         data: { session },
@@ -74,7 +79,6 @@ export function Navbar({ type }: NavbarProps) {
 
     getUser();
 
-    // Optional: Listen for auth changes (e.g. if they log out in another tab)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -84,11 +88,16 @@ export function Navbar({ type }: NavbarProps) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  // Calculate Cart Count
+  const cartCount = mounted
+    ? items.reduce((acc, item) => acc + item.quantity, 0)
+    : 0;
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setUser(null); // Clear state immediately for UI responsiveness
+    setUser(null);
     router.replace("/auth");
-    setOpen(false); // Close mobile menu if open
+    setOpen(false);
   };
 
   return (
@@ -129,19 +138,59 @@ export function Navbar({ type }: NavbarProps) {
 
             <div className="h-6 w-px bg-slate-200 mx-2" />
 
-            {/* 5. Desktop Auth Logic */}
-            {!loadingAuth &&
-              (user ? (
-                // IF LOGGED IN: Show Logout
+            {/* 3. CART ICON (Only for customers) */}
+            {type === "customer" && (
+              <Link href="/cart">
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-slate-500 hover:text-red-600 hover:bg-red-50"
+                  size="icon"
+                  className="relative text-slate-600 hover:text-indigo-600"
                 >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  <ShoppingBag className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+                      {cartCount}
+                    </span>
+                  )}
                 </Button>
+              </Link>
+            )}
+
+            {/* 4. Desktop Auth Logic */}
+            {!loadingAuth &&
+              (user ? (
+                // IF LOGGED IN: Show My Orders & Logout
+                <div className="flex items-center gap-2">
+                  {type === "customer" && (
+                    <Link href="/profile/orders">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-600"
+                      >
+                        My Orders
+                      </Button>
+                    </Link>
+                  )}
+                  <Link href="/profile">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-slate-600"
+                    >
+                      Profile
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-slate-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
               ) : (
                 // IF LOGGED OUT: Show Sign In
                 <Link href="/auth">
@@ -156,8 +205,26 @@ export function Navbar({ type }: NavbarProps) {
               ))}
           </div>
 
-          {/* 3. MOBILE MENU TRIGGER */}
-          <div className="md:hidden">
+          {/* 5. MOBILE MENU TRIGGER */}
+          <div className="md:hidden flex items-center gap-2">
+            {/* Mobile Cart Icon */}
+            {type === "customer" && (
+              <Link href="/cart">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-slate-600"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+                      {cartCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            )}
+
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-slate-600">
@@ -202,9 +269,21 @@ export function Navbar({ type }: NavbarProps) {
                         </Link>
                       );
                     })}
+
+                    {/* Mobile "My Orders" Link (Only if logged in) */}
+                    {user && type === "customer" && (
+                      <Link
+                        href="/profile/orders"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50"
+                      >
+                        <Package className="w-5 h-5" />
+                        My Orders
+                      </Link>
+                    )}
                   </div>
 
-                  {/* 6. Mobile Auth Logic */}
+                  {/* Mobile Auth Logic */}
                   <div className="p-4 border-t border-slate-100">
                     {!loadingAuth &&
                       (user ? (

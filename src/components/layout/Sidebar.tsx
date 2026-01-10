@@ -25,20 +25,23 @@ import {
   Home,
   BookOpen,
   Phone,
+  ListOrdered,
 } from "lucide-react";
 
 // --- 1. Define Links for Both Roles ---
 const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/products", label: "Products", icon: Package }, // Adjust route if your admin page is just /admin
+  { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tags },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/orders", label: "Customer Orders", icon: ListOrdered },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 const customerLinks = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/shop", label: "Shop Products", icon: ShoppingCart },
+  { href: "/shop", label: "Shop Products", icon: Store }, // Changed to Store icon & /products
+  { href: "/cart", label: "My Cart", icon: ShoppingCart },
+  { href: "/profile/orders", label: "My Orders", icon: Package }, // Added Orders link
   { href: "/about", label: "Our Story", icon: BookOpen },
   { href: "/contact", label: "Contact Us", icon: Phone },
 ];
@@ -65,6 +68,7 @@ function NavContent({
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.replace("/auth");
+    if (setOpen) setOpen(false);
   };
 
   return (
@@ -74,6 +78,7 @@ function NavContent({
         <Link
           href="/"
           className="flex items-center gap-2 font-serif font-bold text-xl tracking-tight text-indigo-600"
+          onClick={() => setOpen?.(false)}
         >
           <Store className="w-6 h-6" />
           <span>{type === "admin" ? "Nora Admin" : "Nora"}</span>

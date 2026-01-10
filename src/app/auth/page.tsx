@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Loader2, Mail, Lock, User, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function AuthPage() {
   const supabase = createClient();
@@ -260,10 +261,21 @@ export default function AuthPage() {
                       />
                     </div>
                   </div>
+                  {/* Find this block inside the "Log In" form section */}
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-stone-600 uppercase">
-                      Password
-                    </label>
+                    {/* NEW: Flex container to hold Label on left, Link on right */}
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-semibold text-stone-600 uppercase">
+                        Password
+                      </label>
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
                       <input
