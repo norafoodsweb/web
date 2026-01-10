@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Header from "@/components/layout/Header";
 import { useParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Loader2, ShoppingCart, Plus, Minus, Check } from "lucide-react";
