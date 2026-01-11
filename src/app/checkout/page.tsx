@@ -118,7 +118,7 @@ export default function CheckoutPage() {
       }\n`;
     });
 
-    return `*New Order Request - Nora Foods* 🌿
+    return `*New Order Request - Nora Foods* ⫷⫸
 Order ID: #${orderId}
 --------------------------------
 *Customer Details:*
