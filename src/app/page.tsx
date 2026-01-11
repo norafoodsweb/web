@@ -267,7 +267,7 @@ export default function Home() {
                         Natural Ingredients
                       </h3>
                       <p className="text-stone-600 leading-relaxed">
-                        No preservatives, artificial colors, or additives. Just
+                        No Illegal preservatives, artificial colors, or additives. Just
                         pure goodness straight from nature.
                       </p>
                     </div>
