@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { useCartStore } from "@/app/context/CartContext"; // Check path!
+import { useCartStore } from "@/app/context/CartContext";
 import {
   CheckCircle,
   MapPin,
-  CreditCard,
   Plus,
   Loader2,
   ArrowRight,
   ArrowLeft,
+  MessageCircle,
+  Truck,
+  AlertCircle,
 } from "lucide-react";
 
-// --- Types matching your Database ---
+// --- Types ---
 type Address = {
   id: number;
   name: string;
@@ -34,7 +36,7 @@ export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore();
 
   // Local State
-  const [step, setStep] = useState(1); // 1: Address, 2: Summary, 3: Payment
+  const [step, setStep] = useState(1); // 1: Address, 2: Summary (Final)
   const [loading, setLoading] = useState(true);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
@@ -53,25 +55,24 @@ export default function CheckoutPage() {
     pincode: "",
   });
 
-  // 1. Fetch User Addresses on Mount
+  // 1. Fetch User Addresses
   useEffect(() => {
     const fetchAddresses = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/login?next=/checkout");
+        router.push("/auth?next=/checkout");
         return;
       }
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("addresses")
         .select("*")
         .eq("user_id", user.id);
 
       if (data) {
         setAddresses(data);
-        // Auto-select first address if exists
         if (data.length > 0) setSelectedAddressId(data[0].id);
       }
       setLoading(false);
@@ -106,8 +107,36 @@ export default function CheckoutPage() {
     setLoading(false);
   };
 
-  // 3. Handle Order Creation (The "Pay Now" Logic)
-  const handlePlaceOrder = async (paymentMethod: "cod" | "online") => {
+  // 3. Generate WhatsApp Message
+  const generateWhatsAppMessage = (orderId: number, address: Address) => {
+    const total = getTotalPrice();
+
+    let itemList = "";
+    items.forEach((item, index) => {
+      itemList += `${index + 1}. ${item.name} (x${item.quantity}) - ₹${
+        item.price * item.quantity
+      }\n`;
+    });
+
+    return `*New Order Request - Nora Foods* 🌿
+Order ID: #${orderId}
+--------------------------------
+*Customer Details:*
+→ ${address.name}
+→ ${address.phone}
+→ ${address.address_line1}, ${address.city}, ${address.pincode}
+--------------------------------
+*Items:*
+${itemList}
+--------------------------------
+*Item Total:* ₹${total}
+*Delivery:* To be calculated (₹70/kg)
+--------------------------------
+*Payment:* To be discussed on chat`;
+  };
+
+  // 4. Handle Order Creation & WhatsApp Redirect
+  const handlePlaceOrder = async () => {
     setLoading(true);
     const {
       data: { user },
@@ -116,36 +145,32 @@ export default function CheckoutPage() {
     if (!user || !selectedAddressId) return;
 
     const selectedAddr = addresses.find((a) => a.id === selectedAddressId);
+    if (!selectedAddr) return;
+
     const totalAmount = getTotalPrice();
 
     try {
-      // 1. Prepare data for the RPC function
-      // We need an array of objects like: [{ product_id: 1, quantity: 2 }, ...]
+      // A. Decrement Stock
       const stockUpdateData = items.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
       }));
 
-      // 2. Call the RPC function to deduct stock
-      // This will FAIL if stock is insufficient, stopping the order automatically
       const { error: stockError } = await supabase.rpc("decrement_stock", {
         order_items: stockUpdateData,
       });
 
-      if (stockError) {
-        throw new Error(
-          "One or more items are out of stock. Please refresh cart."
-        );
-      }
+      if (stockError)
+        throw new Error("Some items are out of stock. Please refresh cart.");
 
-      // 3. If Stock Deducted Successfully -> Create Order
+      // B. Create Order in DB
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .insert({
           user_id: user.id,
           status: "pending",
           total_amount: totalAmount,
-          payment_status: paymentMethod === "cod" ? "pending" : "paid",
+          payment_status: "pending", // Pending until confirmed on WA
           shipping_address: selectedAddr,
         })
         .select()
@@ -153,55 +178,86 @@ export default function CheckoutPage() {
 
       if (orderError) throw orderError;
 
-      // 4. Create Order Items (same as before) ...
-      // ... (Rest of your existing code)
+      // C. Create Order Items
+      const orderItemsData = items.map((item) => ({
+        order_id: orderData.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        price_at_purchase: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItemsData);
+      if (itemsError) throw itemsError;
+
+      // D. Success! Redirect to WhatsApp
+      const message = generateWhatsAppMessage(orderData.id, selectedAddr);
+      const whatsappUrl = `https://wa.me/917306874286?text=${encodeURIComponent(
+        message
+      )}`;
+
+      clearCart();
+      window.open(whatsappUrl, "_blank"); // Open WhatsApp
+      router.push("/profile/orders"); // Redirect user to orders page
     } catch (error: any) {
       console.error(error);
       alert("Order failed: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   if (loading && step === 1 && addresses.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-nora-beige">
+        <Loader2 className="animate-spin text-primary h-8 w-8" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 py-12 px-4">
+    <div className="min-h-screen bg-nora-beige py-12 px-4 font-sans">
       <div className="max-w-4xl mx-auto">
-        {/* Progress Steps */}
-        <div className="flex justify-between mb-8 relative">
-          <div className="absolute top-1/2 left-0 w-full h-1 bg-stone-200 -z-10"></div>
-          {[1, 2, 3].map((s) => (
+        {/* Progress Steps (Simplified) */}
+        <div className="flex justify-center gap-4 mb-8">
+          <div
+            className={`flex items-center gap-2 ${
+              step >= 1 ? "text-primary font-bold" : "text-stone-400"
+            }`}
+          >
             <div
-              key={s}
-              className={`flex flex-col items-center bg-stone-50 px-4`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                step >= 1 ? "bg-primary text-white" : "bg-stone-200"
+              }`}
             >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                  step >= s
-                    ? "bg-indigo-600 text-white"
-                    : "bg-stone-300 text-stone-600"
-                }`}
-              >
-                {s}
-              </div>
-              <span className="text-xs mt-1 font-medium text-stone-600">
-                {s === 1 ? "Address" : s === 2 ? "Summary" : "Payment"}
-              </span>
+              1
             </div>
-          ))}
+            Address
+          </div>
+          <div className="w-16 h-[2px] bg-stone-200 self-center"></div>
+          <div
+            className={`flex items-center gap-2 ${
+              step >= 2 ? "text-primary font-bold" : "text-stone-400"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                step >= 2 ? "bg-primary text-white" : "bg-stone-200"
+              }`}
+            >
+              2
+            </div>
+            Confirm
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6 sm:p-8 min-h-[400px]">
+        <div className="bg-white rounded-3xl shadow-sm border border-primary/10 p-6 sm:p-8 min-h-[400px]">
           {/* STEP 1: ADDRESS */}
           {step === 1 && (
             <div>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <MapPin className="text-indigo-600" /> Select Delivery Address
+              <h2 className="text-2xl font-serif font-bold mb-6 flex items-center gap-2 text-primary">
+                <MapPin className="text-secondary" /> Select Delivery Address
               </h2>
 
               {!isAddingNew ? (
@@ -209,50 +265,62 @@ export default function CheckoutPage() {
                   {addresses.map((addr) => (
                     <label
                       key={addr.id}
-                      className={`block p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      className={`block p-5 rounded-2xl border-2 cursor-pointer transition-all group ${
                         selectedAddressId === addr.id
-                          ? "border-indigo-600 bg-indigo-50"
-                          : "border-stone-100 hover:border-stone-300"
+                          ? "border-primary bg-primary/5"
+                          : "border-stone-100 hover:border-primary/30"
                       }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          name="address"
-                          checked={selectedAddressId === addr.id}
-                          onChange={() => setSelectedAddressId(addr.id)}
-                          className="mt-1"
-                        />
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedAddressId === addr.id
+                              ? "border-primary"
+                              : "border-stone-300"
+                          }`}
+                        >
+                          {selectedAddressId === addr.id && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                          )}
+                        </div>
+
                         <div>
-                          <p className="font-bold text-stone-800">
+                          <p className="font-bold text-stone-800 text-lg">
                             {addr.name}
                           </p>
-                          <p className="text-stone-600 text-sm">
+                          <p className="text-stone-600">
                             {addr.address_line1}, {addr.address_line2}
                           </p>
-                          <p className="text-stone-600 text-sm">
+                          <p className="text-stone-600">
                             {addr.city}, {addr.state} - {addr.pincode}
                           </p>
-                          <p className="text-stone-600 text-sm mt-1">
-                            Phone: {addr.phone}
+                          <p className="text-primary font-medium text-sm mt-2 flex items-center gap-1">
+                            <Truck size={14} /> {addr.phone}
                           </p>
                         </div>
                       </div>
+                      <input
+                        type="radio"
+                        name="address"
+                        className="hidden"
+                        checked={selectedAddressId === addr.id}
+                        onChange={() => setSelectedAddressId(addr.id)}
+                      />
                     </label>
                   ))}
 
                   <button
                     onClick={() => setIsAddingNew(true)}
-                    className="w-full py-4 border-2 border-dashed border-stone-300 rounded-xl text-stone-500 font-medium hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 border-2 border-dashed border-primary/30 rounded-2xl text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
                   >
                     <Plus className="h-5 w-5" /> Add New Address
                   </button>
 
-                  <div className="flex justify-end mt-6">
+                  <div className="flex justify-end mt-8">
                     <button
                       disabled={!selectedAddressId}
                       onClick={() => setStep(2)}
-                      className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                      className="bg-primary text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-[#3d5635] transition-colors flex items-center gap-2 shadow-md"
                     >
                       Continue <ArrowRight className="h-4 w-4" />
                     </button>
@@ -268,7 +336,7 @@ export default function CheckoutPage() {
                     <input
                       required
                       placeholder="Full Name"
-                      className="border p-3 rounded-lg"
+                      className="border border-stone-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                       value={newAddress.name}
                       onChange={(e) =>
                         setNewAddress({ ...newAddress, name: e.target.value })
@@ -277,7 +345,7 @@ export default function CheckoutPage() {
                     <input
                       required
                       placeholder="Phone Number"
-                      className="border p-3 rounded-lg"
+                      className="border border-stone-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                       value={newAddress.phone}
                       onChange={(e) =>
                         setNewAddress({ ...newAddress, phone: e.target.value })
@@ -287,7 +355,7 @@ export default function CheckoutPage() {
                   <input
                     required
                     placeholder="Address Line 1"
-                    className="w-full border p-3 rounded-lg"
+                    className="w-full border border-stone-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                     value={newAddress.address_line1}
                     onChange={(e) =>
                       setNewAddress({
@@ -298,7 +366,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     placeholder="Address Line 2 (Optional)"
-                    className="w-full border p-3 rounded-lg"
+                    className="w-full border border-stone-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                     value={newAddress.address_line2}
                     onChange={(e) =>
                       setNewAddress({
@@ -311,7 +379,7 @@ export default function CheckoutPage() {
                     <input
                       required
                       placeholder="City"
-                      className="border p-3 rounded-lg"
+                      className="border border-stone-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                       value={newAddress.city}
                       onChange={(e) =>
                         setNewAddress({ ...newAddress, city: e.target.value })
@@ -320,7 +388,7 @@ export default function CheckoutPage() {
                     <input
                       required
                       placeholder="State"
-                      className="border p-3 rounded-lg"
+                      className="border border-stone-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                       value={newAddress.state}
                       onChange={(e) =>
                         setNewAddress({ ...newAddress, state: e.target.value })
@@ -330,7 +398,7 @@ export default function CheckoutPage() {
                   <input
                     required
                     placeholder="Pincode"
-                    className="w-full border p-3 rounded-lg"
+                    className="w-full border border-stone-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                     value={newAddress.pincode}
                     onChange={(e) =>
                       setNewAddress({ ...newAddress, pincode: e.target.value })
@@ -341,14 +409,14 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setIsAddingNew(false)}
-                      className="flex-1 py-3 border rounded-lg text-stone-600"
+                      className="flex-1 py-3 border border-stone-300 rounded-xl text-stone-600 font-medium hover:bg-stone-50"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex-1 py-3 bg-indigo-600 text-white rounded-lg font-bold"
+                      className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-[#3d5635]"
                     >
                       {loading ? "Saving..." : "Save Address"}
                     </button>
@@ -358,24 +426,24 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* STEP 2: SUMMARY */}
+          {/* STEP 2: SUMMARY & CONFIRM */}
           {step === 2 && (
             <div>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <CheckCircle className="text-indigo-600" /> Order Summary
+              <h2 className="text-2xl font-serif font-bold mb-6 flex items-center gap-2 text-primary">
+                <CheckCircle className="text-secondary" /> Order Summary
               </h2>
 
-              <div className="bg-stone-50 p-4 rounded-xl mb-6">
+              <div className="bg-nora-beige p-6 rounded-2xl mb-6 border border-primary/10">
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex justify-between items-center py-3 border-b border-stone-200 last:border-0"
+                    className="flex justify-between items-center py-3 border-b border-primary/10 last:border-0"
                   >
                     <div className="flex items-center gap-4">
-                      <span className="font-bold text-stone-500">
+                      <span className="font-bold text-primary bg-white w-8 h-8 flex items-center justify-center rounded-lg shadow-sm border border-primary/10">
                         {item.quantity}x
                       </span>
-                      <span className="text-stone-800 font-medium">
+                      <span className="text-stone-800 font-medium text-lg">
                         {item.name}
                       </span>
                     </div>
@@ -384,88 +452,67 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                 ))}
-                <div className="flex justify-between items-center pt-4 mt-2 border-t border-stone-200 text-lg font-bold">
-                  <span>Total Payable</span>
-                  <span className="text-indigo-600">₹{getTotalPrice()}</span>
+
+                {/* Delivery Charge Note */}
+                <div className="flex justify-between items-center py-3 border-t border-primary/10 mt-2 text-stone-600">
+                  <div className="flex items-center gap-2">
+                    <Truck size={18} />
+                    <span>Delivery Charge</span>
+                  </div>
+                  <span className="font-medium text-sm bg-accent/20 text-stone-800 px-2 py-1 rounded">
+                    ₹70/Kg
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center pt-4 mt-2 border-t border-primary/20">
+                  <span className="text-lg font-bold text-stone-800">
+                    Total
+                  </span>
+                  <div className="text-right">
+                    <span className="text-2xl font-serif font-bold text-primary block">
+                      ₹{getTotalPrice()}
+                    </span>
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
+                      + Delivery
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-between">
+              <div className="bg-blue-50 p-4 rounded-xl flex gap-3 text-blue-700 text-sm mb-6 border border-blue-100">
+                <AlertCircle className="shrink-0 w-5 h-5" />
+                <p>
+                  By confirming, you will be redirected to{" "}
+                  <strong>WhatsApp</strong>. We will calculate final
+                  weight-based shipping and finalize payment there.
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center">
                 <button
                   onClick={() => setStep(1)}
-                  className="text-stone-500 font-medium flex items-center gap-2 hover:text-stone-800"
+                  className="text-stone-500 font-bold flex items-center gap-2 hover:text-primary transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" /> Back
                 </button>
+
+                {/* DIRECT CONFIRM ACTION */}
                 <button
-                  onClick={() => setStep(3)}
-                  className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                  onClick={handlePlaceOrder}
+                  disabled={loading}
+                  className="bg-[#25D366] text-white px-6 sm:px-8 py-3 rounded-xl font-bold hover:bg-[#20bd5a] transition-colors flex items-center gap-2 shadow-md shadow-green-100"
                 >
-                  Proceed to Payment <ArrowRight className="h-4 w-4" />
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin h-5 w-5" /> Processing...
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="h-5 w-5" /> Confirm Order
+                    </>
+                  )}
                 </button>
               </div>
-            </div>
-          )}
-
-          {/* STEP 3: PAYMENT */}
-          {step === 3 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <CreditCard className="text-indigo-600" /> Payment Method
-              </h2>
-
-              <div className="space-y-4 mb-8">
-                {/* 1. Cash on Delivery */}
-                <button
-                  onClick={() => handlePlaceOrder("cod")}
-                  disabled={loading}
-                  className="w-full flex items-center justify-between p-6 border rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all group text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-green-100 text-green-600 rounded-full group-hover:bg-green-200">
-                      <CreditCard className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-stone-800">
-                        Cash on Delivery
-                      </p>
-                      <p className="text-sm text-stone-500">
-                        Pay when your order arrives
-                      </p>
-                    </div>
-                  </div>
-                  <ArrowRight className="text-stone-300 group-hover:text-indigo-600" />
-                </button>
-
-                {/* 2. Online Payment (Stub) */}
-                <button
-                  onClick={() => handlePlaceOrder("online")} // In reality, this would open Razorpay/Stripe
-                  disabled={loading}
-                  className="w-full flex items-center justify-between p-6 border rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all group text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-full group-hover:bg-blue-200">
-                      <CreditCard className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-stone-800">
-                        Pay Online (Card/UPI)
-                      </p>
-                      <p className="text-sm text-stone-500">
-                        Secure payment via Razorpay/Stripe
-                      </p>
-                    </div>
-                  </div>
-                  <ArrowRight className="text-stone-300 group-hover:text-indigo-600" />
-                </button>
-              </div>
-
-              <button
-                onClick={() => setStep(2)}
-                className="text-stone-500 font-medium flex items-center gap-2 hover:text-stone-800"
-              >
-                <ArrowLeft className="h-4 w-4" /> Back to Summary
-              </button>
             </div>
           )}
         </div>

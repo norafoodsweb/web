@@ -172,9 +172,12 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between text-stone-600">
                     <span>Shipping Estimate</span>
-                    <span className="text-green-600 font-bold uppercase text-xs tracking-wider bg-green-50 px-2 py-1 rounded">
-                      Free
+                    <span className="font-medium text-stone-800">
+                      ₹{getTotalPrice()}
                     </span>
+                    {/* <span className="text-green-600 font-bold uppercase text-xs tracking-wider bg-green-50 px-2 py-1 rounded">
+                      Free
+                    </span> */}
                   </div>
                 </div>
 
