@@ -119,7 +119,7 @@ export default function Home() {
 
           <div className="mt-16 text-center">
             <Link
-              href="/products"
+              href="/shop"
               className="inline-block border-b-2 border-secondary text-secondary font-bold hover:text-primary hover:border-primary transition-colors pb-1"
             >
               View All Products
