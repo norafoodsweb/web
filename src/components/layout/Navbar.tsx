@@ -28,6 +28,7 @@ import {
   BookOpen,
   Phone,
   ShoppingBag,
+  UserRound,
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 
@@ -292,6 +293,18 @@ export function Navbar({ type }: NavbarProps) {
                       >
                         <Package className="w-5 h-5 text-stone-400" />
                         My Orders
+                      </Link>
+                    )}
+                    {user && type === "customer" && (
+                      <Link href="/profile">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-stone-600 hover:bg-white hover:text-primary transition-all hover:shadow-sm"
+                        >
+                          <UserRound className="w-5 h-5 text-stone-400" />
+                          Profile
+                        </Button>
                       </Link>
                     )}
                   </div>

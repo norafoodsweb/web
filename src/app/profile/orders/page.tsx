@@ -14,6 +14,7 @@ import {
   XCircle,
   Truck,
 } from "lucide-react";
+import { Navbar } from "@/components/layout/Navbar";
 
 // --- Types ---
 type OrderItem = {
@@ -151,7 +152,9 @@ export default function OrdersPage() {
 
   // --- Main List ---
   return (
-    <div className="min-h-screen bg-stone-50 py-12 px-4 sm:px-6">
+    <div className="min-h-screen bg-stone-50 sm:px-6">
+      <Navbar type="customer" />
+      <div className="px-4 py-4">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-serif font-bold text-stone-800">
@@ -256,6 +259,7 @@ export default function OrdersPage() {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

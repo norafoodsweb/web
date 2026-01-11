@@ -76,7 +76,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/products"
+                href="/shop"
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-bold rounded-full text-white bg-primary hover:bg-[#3d5635] transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
               >
                 Shop Now
