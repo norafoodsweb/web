@@ -299,8 +299,7 @@ export function Navbar({ type }: NavbarProps) {
                       <Link href="/profile">
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-stone-600 hover:bg-white hover:text-primary transition-all hover:shadow-sm"
+                          className="flex items-center gap-4 px-4 py-3.5 ml-1.5 rounded-xl text-sm font-bold text-stone-600 hover:bg-white hover:text-primary transition-all hover:shadow-sm"
                         >
                           <UserRound className="w-5 h-5 text-stone-400" />
                           Profile

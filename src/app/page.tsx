@@ -92,7 +92,7 @@ export default function Home() {
         </section>
 
         {/* --- 2. BESTSELLERS SECTION --- */}
-        <section className="py-24 px-4 md:px-8 max-w-7xl mx-auto bg-nora-beige">
+        <section className="pt-24 pb-2 px-4 md:px-8 max-w-7xl mx-auto bg-nora-beige">
           <div className="text-center mb-16">
             <span className="text-secondary font-bold tracking-widest uppercase text-sm mb-3 block">
               Customer Favorites
@@ -128,7 +128,7 @@ export default function Home() {
         </section>
 
         {/* --- 3. OUR STORY & COMMUNITY SECTION --- */}
-        <section id="about" className="py-24 bg-white scroll-mt-20">
+        <section id="about" className="py-10 md:py-24 bg-white scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             {/* Top Row: Story & Community */}
             <div className="grid md:grid-cols-2 gap-12 lg:gap-24 items-center mb-24">
