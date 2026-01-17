@@ -29,6 +29,7 @@ import {
   Phone,
   ShoppingBag,
   UserRound,
+  BadgeInfo,
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 
@@ -137,6 +138,12 @@ export function Navbar({ type }: NavbarProps) {
                 </Link>
               );
             })}
+            {/* 4. Version Badge */}
+            <div className="flex items-center gap-2 text-sm font-bold transition-all text-stone-500 hover:text-primary">
+              <Link href={"/version"}>
+                <BadgeInfo className="w-4 h-4 " />
+              </Link>
+            </div>
 
             <div className="h-6 w-px bg-stone-300 mx-2" />
 
@@ -306,6 +313,14 @@ export function Navbar({ type }: NavbarProps) {
                         </Button>
                       </Link>
                     )}
+                    <Link
+                      href="/version"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold text-stone-600 hover:bg-white hover:text-primary transition-all hover:shadow-sm"
+                    >
+                      <BadgeInfo className="w-5 h-5 text-stone-400" />
+                      About
+                    </Link>
                   </div>
 
                   {/* Mobile Auth Logic */}
