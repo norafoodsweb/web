@@ -30,6 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <meta name="apple-mobile-web-app-title" content="Nora Foods" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bitter.variable} antialiased bg-background text-foreground`}
       >
